@@ -1,25 +1,23 @@
 let fs = require("fs");
 
 module.exports = {
-  savePage: savePage
+  savePage: savePage,
+  createDirs: createDirs
 }
 
 function savePage(page) {
   return new Promise((resolve, reject) => {
-    createDirs(page.root)
-      .then((dir) => {
-        fs.writeFile(`${dir}/${page.title}.txt`, page.content, (err) => {
-          if (err) { reject(err); }
-          resolve();
-      });
+    fs.writeFile(`${page.rootDir}/${page.title}.txt`, page.html, (err) => {
+      if (err) { reject(err); }
+      resolve();
     });
   });
 }
 
-function createDirs(root) {
+function createDirs(page) {
   return new Promise((resolve, reject) => {
     let dataDir = './data';
-    let rootDir = `${dataDir}/${root}`;
+    let rootDir = `${dataDir}/${page.root}`;
     fs.mkdir(dataDir, (err) => {
       if (err && err.code !== 'EEXIST') { reject(err) }
       fs.mkdir(rootDir, (err) => {
