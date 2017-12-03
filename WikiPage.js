@@ -1,15 +1,19 @@
 class WikiPage {
   constructor(path) {
     this.path = path;
-    this.setTitle(path.substring(6, path.length))
+    this.setTitle(path.split("/")[2]);
   }
 
   setTitle(rawTitle) {
-    this.title = rawTitle.replace("[^a-zA-Z0-9.\\-]", "_");
+    this.title = rawTitle.replace("[^a-zA-Z0-9.\\-]", "-").toLowerCase();
   }
 
   setContent(rawHTML) {
     this.html = rawHTML;
+  }
+
+  setRootDir(dir) {
+    this.rootDir = dir;
   }
 }
 
