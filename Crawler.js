@@ -15,34 +15,45 @@ class Crawler {
     let links = new Set();
     this.pages.forEach(page => {
       page.root = page.title;
-      this.scrape(page)
-        .then(() => {
-          this.crawlLinks(page)
-            .then((data) => {
-              links.add(data);
-              fileHandler.savePage(page);
+      fileHandler.createDirs(page)
+        .then((dir) => {
+          page.setRootDir(dir);
+          this.scrape(page)
+            .then(() => {
+              this.crawlLinks(page)
+                .then((data) => {
+                  links.add(data);
+                  fileHandler.savePage(page)
+                    .then()
+                    .catch(err => {
+                      console.log(err);
+                    });
+                })
+                .catch((err) => {
+                  console.log(err);
+                });
             })
             .catch((err) => {
               console.log(err);
             });
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err);
-        });
+        })
     });
   }
 
   scrape(page) {
     return new Promise((resolve, reject) => {
       rp(BASE_URL + page.path)
-      .then((htmlString) => {
-        page.setContent(htmlString)
-        this.extractInternalLinks(page);
-        resolve();
-      })
-      .catch((err) => {
-        reject(err);
-      });
+        .then((htmlString) => {
+          page.setContent(htmlString)
+          this.extractInternalLinks(page);
+          resolve();
+        })
+        .catch((err) => {
+          reject(err);
+        });
     });
   }
 
@@ -51,7 +62,7 @@ class Crawler {
     let matches = page.html.match(p);
     let links = new Set();
     matches.forEach(match => {
-      links.add(match.substring(6, match.length -1));
+      links.add(match.substring(6, match.lastIndexOf('"')));
     });
     page.links = links;
   }
@@ -67,13 +78,21 @@ class Crawler {
           this.visited.add(link);
           let page = new WikiPage(link);
           page.root = root.title;
+          page.setRootDir(root.rootDir);
           promises.push(new Promise((resolve, reject) => {
             this.scrape(page)
-            .then(() => {
-              links.add(page.links);
-              fileHandler.savePage(page);
-              resolve();
-            });
+              .then(() => {
+                links.add(page.links);
+                fileHandler.savePage(page)
+                  .then()
+                  .catch(err => {
+                    reject(err);
+                  });
+                resolve();
+              })
+              .catch(err => {
+                reject(err);
+              });
           }));
         }
       });
